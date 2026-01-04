@@ -41,6 +41,17 @@ export const rsvpStatusEnum = pgEnum('rsvp_status', [
   'attended',
   'cancelled',
 ])
+export const jobTypeEnum = pgEnum('job_type', [
+  'full-time',
+  'part-time',
+  'contract',
+  'internship',
+])
+export const jobLocationEnum = pgEnum('job_location', [
+  'remote',
+  'hybrid',
+  'onsite',
+])
 
 // NextAuth required tables
 export const users = pgTable('users', {
@@ -223,6 +234,33 @@ export const deals = pgTable('deals', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
 
+export const jobs = pgTable('jobs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  startupId: uuid('startup_id')
+    .notNull()
+    .references(() => startups.id, { onDelete: 'cascade' }),
+  postedById: uuid('posted_by_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  requirements: text('requirements'),
+  salaryMin: integer('salary_min'),
+  salaryMax: integer('salary_max'),
+  salaryCurrency: text('salary_currency').default('INR'),
+  jobType: jobTypeEnum('job_type').default('full-time'),
+  locationType: jobLocationEnum('location_type').default('hybrid'),
+  city: text('city'),
+  applyUrl: text('apply_url'),
+  applyEmail: text('apply_email'),
+  skills: text('skills').array().default([]),
+  isActive: boolean('is_active').default(true),
+  isFeatured: boolean('is_featured').default(false),
+  expiresAt: timestamp('expires_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(profiles, {
@@ -244,6 +282,18 @@ export const startupsRelations = relations(startups, ({ one, many }) => ({
     references: [users.id],
   }),
   deals: many(deals),
+  jobs: many(jobs),
+}))
+
+export const jobsRelations = relations(jobs, ({ one }) => ({
+  startup: one(startups, {
+    fields: [jobs.startupId],
+    references: [startups.id],
+  }),
+  postedBy: one(users, {
+    fields: [jobs.postedById],
+    references: [users.id],
+  }),
 }))
 
 export const eventsRelations = relations(events, ({ one, many }) => ({

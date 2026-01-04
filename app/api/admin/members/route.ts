@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { profiles, users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
+import { sendApprovalEmail } from '@/lib/email'
 
 // Get all members (admin only)
 export async function GET() {
@@ -71,6 +72,22 @@ export async function PATCH(request: Request) {
   await db.update(profiles)
     .set(updates)
     .where(eq(profiles.id, memberId))
+
+  // Send approval email when member is approved
+  if (isApproved === true) {
+    const member = await db.query.users.findFirst({
+      where: eq(users.id, memberId),
+    })
+
+    if (member?.email) {
+      const baseUrl = process.env.NEXTAUTH_URL || 'https://agihouse-india.onrender.com'
+      await sendApprovalEmail({
+        to: member.email,
+        name: member.name || '',
+        profileUrl: `${baseUrl}/members/${memberId}`,
+      })
+    }
+  }
 
   return NextResponse.json({ success: true })
 }
