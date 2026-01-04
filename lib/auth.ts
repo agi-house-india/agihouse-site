@@ -1,6 +1,5 @@
 import NextAuth from 'next-auth'
 import Google from 'next-auth/providers/google'
-import LinkedIn from 'next-auth/providers/linkedin'
 import { DrizzleAdapter } from '@auth/drizzle-adapter'
 import { db } from './db'
 import { accounts, sessions, users, verificationTokens } from './db/schema'
@@ -11,10 +10,6 @@ export const authConfig: NextAuthConfig = {
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    LinkedIn({
-      clientId: process.env.LINKEDIN_CLIENT_ID!,
-      clientSecret: process.env.LINKEDIN_CLIENT_SECRET!,
     }),
   ],
   adapter: DrizzleAdapter(db, {
