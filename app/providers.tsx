@@ -4,20 +4,37 @@
 import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect, Suspense } from "react"
 import { usePostHog } from 'posthog-js/react'
+import { SessionProvider } from 'next-auth/react'
 
 import posthog from 'posthog-js'
 import { PostHogProvider as PHProvider } from 'posthog-js/react'
 
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <SessionProvider>
+      <PostHogProvider>
+        {children}
+      </PostHogProvider>
+    </SessionProvider>
+  )
+}
+
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
-      api_host: "/ingest",
-      ui_host: "https://eu.posthog.com",
-      person_profiles: 'always', // or 'always' to create profiles for anonymous users as well
-      capture_pageview: false, // Disable automatic pageview capture, as we capture manually
-      capture_pageleave: true, // Enable pageleave capture
-    })
+    if (process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+      posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
+        api_host: "/ingest",
+        ui_host: "https://eu.posthog.com",
+        person_profiles: 'always',
+        capture_pageview: false,
+        capture_pageleave: true,
+      })
+    }
   }, [])
+
+  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+    return <>{children}</>
+  }
 
   return (
     <PHProvider client={posthog}>

@@ -15,15 +15,26 @@ const nextConfig = {
       },
     ];
   },
-  skipTrailingSlashRedirect: true, 
+  skipTrailingSlashRedirect: true,
   images: {
+    // Reduce memory usage on Render free tier (512MB)
+    unoptimized: process.env.NODE_ENV === 'production',
     remotePatterns: [
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
         port: "",
         pathname: "/agihouse/**",
-        search: "",
+      },
+      {
+        // Google profile images
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        // Google profile images (alternate domain)
+        protocol: "https",
+        hostname: "*.googleusercontent.com",
       },
     ],
   },
