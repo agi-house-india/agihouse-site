@@ -21,21 +21,40 @@ const Navbar = () => (
         AGIHOUSE
       </Link>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-3 sm:gap-5">
         <Link
-          href="https://defense.agihouse.in/"
-          target="_blank"
-          className="font-semibold text-[16px] text-gray-200 hover:text-white transition-colors duration-200 leading-[30px] z-10"
+          href="/startups"
+          className="hidden md:block font-semibold text-[15px] text-gray-200 hover:text-white transition-colors duration-200 z-10"
         >
-          Defense Tech
+          Startups
         </Link>
 
         <Link
-          href="https://lu.ma/agihouseindia" 
-          target="_blank"
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 transition-colors duration-200 rounded-lg font-semibold text-[16px] text-white leading-[20px] z-10"
+          href="/members"
+          className="hidden md:block font-semibold text-[15px] text-gray-200 hover:text-white transition-colors duration-200 z-10"
+        >
+          Members
+        </Link>
+
+        <Link
+          href="/events"
+          className="hidden sm:block font-semibold text-[15px] text-gray-200 hover:text-white transition-colors duration-200 z-10"
         >
           Events
+        </Link>
+
+        <Link
+          href="/blog"
+          className="hidden lg:block font-semibold text-[15px] text-gray-200 hover:text-white transition-colors duration-200 z-10"
+        >
+          Blog
+        </Link>
+
+        <Link
+          href="/auth/signin"
+          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 transition-colors duration-200 rounded-lg font-semibold text-[15px] text-white z-10"
+        >
+          Sign In
         </Link>
       </div>
     </div>

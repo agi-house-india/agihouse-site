@@ -1,13 +1,14 @@
 import Communities from '../../components/Communities';
-import Head  from 'next/head';
+
+export const metadata = {
+    title: 'Join | AGI House India',
+    description: 'Join the AGI House India community in your city',
+};
 
 export default function Join() {
     return (
         <div>
-            <Head>
-                <title>Join | AGI House</title>
-            </Head>
             <Communities />
         </div>
-    )
+    );
 }
