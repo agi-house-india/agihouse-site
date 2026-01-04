@@ -52,6 +52,16 @@ export const jobLocationEnum = pgEnum('job_location', [
   'hybrid',
   'onsite',
 ])
+export const forumCategoryEnum = pgEnum('forum_category', [
+  'general',
+  'introductions',
+  'fundraising',
+  'hiring',
+  'product',
+  'technical',
+  'events',
+  'resources',
+])
 
 // NextAuth required tables
 export const users = pgTable('users', {
@@ -261,6 +271,54 @@ export const jobs = pgTable('jobs', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
+// Forum tables
+export const forumThreads = pgTable('forum_threads', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  authorId: uuid('author_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  slug: text('slug').notNull().unique(),
+  content: text('content').notNull(),
+  category: forumCategoryEnum('category').default('general'),
+  isPinned: boolean('is_pinned').default(false),
+  isLocked: boolean('is_locked').default(false),
+  viewCount: integer('view_count').default(0),
+  replyCount: integer('reply_count').default(0),
+  lastReplyAt: timestamp('last_reply_at'),
+  lastReplyById: uuid('last_reply_by_id').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export const forumReplies = pgTable('forum_replies', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  threadId: uuid('thread_id')
+    .notNull()
+    .references(() => forumThreads.id, { onDelete: 'cascade' }),
+  authorId: uuid('author_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  content: text('content').notNull(),
+  parentId: uuid('parent_id'),
+  isEdited: boolean('is_edited').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export const forumLikes = pgTable(
+  'forum_likes',
+  {
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    threadId: uuid('thread_id').references(() => forumThreads.id, { onDelete: 'cascade' }),
+    replyId: uuid('reply_id').references(() => forumReplies.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.threadId, table.replyId] })]
+)
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(profiles, {
@@ -320,4 +378,33 @@ export const dealsRelations = relations(deals, ({ one }) => ({
     fields: [deals.investorId],
     references: [users.id],
   }),
+}))
+
+export const forumThreadsRelations = relations(forumThreads, ({ one, many }) => ({
+  author: one(users, {
+    fields: [forumThreads.authorId],
+    references: [users.id],
+  }),
+  lastReplyBy: one(users, {
+    fields: [forumThreads.lastReplyById],
+    references: [users.id],
+  }),
+  replies: many(forumReplies),
+  likes: many(forumLikes),
+}))
+
+export const forumRepliesRelations = relations(forumReplies, ({ one, many }) => ({
+  thread: one(forumThreads, {
+    fields: [forumReplies.threadId],
+    references: [forumThreads.id],
+  }),
+  author: one(users, {
+    fields: [forumReplies.authorId],
+    references: [users.id],
+  }),
+  parent: one(forumReplies, {
+    fields: [forumReplies.parentId],
+    references: [forumReplies.id],
+  }),
+  likes: many(forumLikes),
 }))

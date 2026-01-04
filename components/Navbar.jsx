@@ -58,6 +58,13 @@ const Navbar = () => {
           </Link>
 
           <Link
+            href="/forum"
+            className="hidden xl:block font-semibold text-[15px] text-gray-200 hover:text-white transition-colors duration-200 z-10"
+          >
+            Forum
+          </Link>
+
+          <Link
             href="/blog"
             className="hidden xl:block font-semibold text-[15px] text-gray-200 hover:text-white transition-colors duration-200 z-10"
           >

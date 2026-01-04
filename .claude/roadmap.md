@@ -82,7 +82,7 @@ Transform AGI House India from a static landing page into **the deal flow machin
 | RSVP System | P1 | ✅ Done | Event registration API |
 | Email Notifications | P1 | ✅ Done | Resend integration for approval emails |
 | Job Board | P2 | ✅ Done | AI roles at member companies |
-| Discussion Forums | P2 | ⏳ Pending | Topic-based discussions |
+| Discussion Forums | P2 | ✅ Done | Topic-based discussions |
 
 **Completed features:**
 - `/dashboard` - User dashboard with intro requests, events, quick actions
@@ -93,6 +93,11 @@ Transform AGI House India from a static landing page into **the deal flow machin
 - `/jobs/[id]` - Job detail pages
 - `/jobs/post` - Job posting form for startup founders
 - `/api/jobs` - Jobs API for listing and posting
+- `/forum` - Discussion forum with category filtering
+- `/forum/[slug]` - Thread detail pages with replies
+- `/forum/new` - New discussion form
+- `/api/forum` - Forum API for threads
+- `/api/forum/[slug]/replies` - Replies API
 - Member search by name, company, interests
 - Member filtering by role and city
 - Resend email integration for member approval notifications
