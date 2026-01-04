@@ -62,6 +62,18 @@ export const forumCategoryEnum = pgEnum('forum_category', [
   'events',
   'resources',
 ])
+export const subscriptionPlanEnum = pgEnum('subscription_plan', [
+  'free',
+  'premium',
+  'enterprise',
+])
+export const subscriptionStatusEnum = pgEnum('subscription_status', [
+  'active',
+  'canceled',
+  'past_due',
+  'trialing',
+  'incomplete',
+])
 
 // NextAuth required tables
 export const users = pgTable('users', {
@@ -71,6 +83,7 @@ export const users = pgTable('users', {
   emailVerified: timestamp('email_verified', { mode: 'date' }),
   image: text('image'),
   isAdmin: boolean('is_admin').default(false),
+  stripeCustomerId: text('stripe_customer_id'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
@@ -271,6 +284,23 @@ export const jobs = pgTable('jobs', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
+// Subscription tables
+export const subscriptions = pgTable('subscriptions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  stripeSubscriptionId: text('stripe_subscription_id').unique(),
+  stripePriceId: text('stripe_price_id'),
+  plan: subscriptionPlanEnum('plan').default('free'),
+  status: subscriptionStatusEnum('status').default('active'),
+  currentPeriodStart: timestamp('current_period_start'),
+  currentPeriodEnd: timestamp('current_period_end'),
+  cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
 // Forum tables
 export const forumThreads = pgTable('forum_threads', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -332,6 +362,10 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   rsvps: many(eventRsvps),
   blogPosts: many(blogPosts),
   dealsAsInvestor: many(deals),
+  subscription: one(subscriptions, {
+    fields: [users.id],
+    references: [subscriptions.userId],
+  }),
 }))
 
 export const startupsRelations = relations(startups, ({ one, many }) => ({
@@ -376,6 +410,13 @@ export const dealsRelations = relations(deals, ({ one }) => ({
   }),
   investor: one(users, {
     fields: [deals.investorId],
+    references: [users.id],
+  }),
+}))
+
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+  user: one(users, {
+    fields: [subscriptions.userId],
     references: [users.id],
   }),
 }))

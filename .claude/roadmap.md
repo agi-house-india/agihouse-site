@@ -104,16 +104,39 @@ Transform AGI House India from a static landing page into **the deal flow machin
 
 ---
 
-## Phase 5: Monetization ⏳ PENDING
+## Phase 4.5: Deal Flow Engine ⏳ PENDING
+**Goal:** Become the infrastructure for AI deals in India
+
+| Feature | Priority | Description |
+|---------|----------|-------------|
+| Investor Directory | P0 | Angels, VCs, family offices with thesis, check size, sectors |
+| AI-Powered Matching | P0 | Recommend investors↔startups, founders↔co-founders, member↔member |
+| Admin Dashboard | P1 | Approve members, moderate content, view metrics, manage featured |
+| Weekly Digest Email | P1 | New startups, upcoming events, deals closed, content highlights |
+| Demo Day / Pitch Events | P1 | Virtual pitch sessions with investor tracking & intro facilitation |
+| Due Diligence Room | P2 | Secure document sharing with access control & view tracking |
+
+---
+
+## Phase 5: Monetization ✅ COMPLETE
 **Goal:** Sustainable business model
 
-| Revenue Stream | Description |
-|----------------|-------------|
-| Premium Membership | ₹10K-50K/year for full access |
-| Enterprise Tier | For companies (talent, visibility) |
-| Event Tickets | Paid premium events |
-| Sponsorships | Partner visibility packages |
-| Success Fees | % of deals closed through platform |
+| Revenue Stream | Status | Description |
+|----------------|--------|-------------|
+| Premium Membership | ✅ Done | ₹999/month for full access |
+| Enterprise Tier | ✅ Done | ₹4,999/month for teams |
+| Stripe Integration | ✅ Done | Checkout, billing portal, webhooks |
+| Event Tickets | ⏳ Pending | Paid premium events |
+| Sponsorships | ⏳ Pending | Partner visibility packages |
+
+**Completed features:**
+- `/pricing` - Pricing page with Free, Premium, Enterprise plans
+- `/api/billing/checkout` - Stripe checkout session creation
+- `/api/billing/portal` - Stripe billing portal for subscription management
+- `/api/webhooks/stripe` - Webhook handler for subscription events
+- `/billing/success` - Success page after checkout
+- `subscriptions` table for tracking user subscriptions
+- Subscription helper utilities (`lib/subscription.ts`)
 
 ---
 
@@ -130,8 +153,9 @@ Transform AGI House India from a static landing page into **the deal flow machin
 ## Technical Debt & Future Work
 - [ ] Add image upload for profiles
 - [ ] Implement real-time notifications
-- [ ] Add admin dashboard
-- [ ] Set up email transactional (Resend)
+- [x] Set up email transactional (Resend) ✅
 - [ ] Add Stripe for payments
 - [ ] Implement full-text search
 - [ ] Mobile app (React Native)
+
+*Note: Admin dashboard moved to Phase 4.5*

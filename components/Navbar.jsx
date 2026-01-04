@@ -65,6 +65,13 @@ const Navbar = () => {
           </Link>
 
           <Link
+            href="/pricing"
+            className="hidden xl:block font-semibold text-[15px] text-purple-400 hover:text-purple-300 transition-colors duration-200 z-10"
+          >
+            Premium
+          </Link>
+
+          <Link
             href="/blog"
             className="hidden xl:block font-semibold text-[15px] text-gray-200 hover:text-white transition-colors duration-200 z-10"
           >
