@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { Suspense } from 'react'
 import { db } from '@/lib/db'
 import { profiles, users } from '@/lib/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, ilike, or, sql } from 'drizzle-orm'
 import MemberFilters from './MemberFilters'
 
 export const metadata = {
@@ -27,9 +27,26 @@ const roleColors: Record<string, string> = {
   community: 'bg-gray-600/20 text-gray-400',
 }
 
-async function getMembers() {
+interface SearchParams {
+  role?: string
+  city?: string
+  q?: string
+}
+
+async function getMembers(searchParams: SearchParams) {
+  // Build conditions
+  const conditions = [eq(profiles.isApproved, true)]
+
+  if (searchParams.role && searchParams.role !== 'all') {
+    conditions.push(eq(profiles.role, searchParams.role as 'founder' | 'investor' | 'talent' | 'enterprise' | 'community'))
+  }
+
+  if (searchParams.city && searchParams.city !== 'All') {
+    conditions.push(ilike(profiles.city, `%${searchParams.city}%`))
+  }
+
   // Public directory: only show approved members
-  const membersData = await db
+  let membersData = await db
     .select({
       id: users.id,
       name: users.name,
@@ -45,16 +62,36 @@ async function getMembers() {
       lookingFor: profiles.lookingFor,
     })
     .from(users)
-    .innerJoin(profiles, and(
-      eq(users.id, profiles.id),
-      eq(profiles.isApproved, true)
-    ))
+    .innerJoin(profiles, and(eq(users.id, profiles.id), ...conditions))
+
+  // Filter by search query (client-side for now since we need to search across multiple fields)
+  if (searchParams.q) {
+    const query = searchParams.q.toLowerCase()
+    membersData = membersData.filter((member) => {
+      const searchableText = [
+        member.name,
+        member.company,
+        member.title,
+        member.bio,
+        ...(member.interests || []),
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return searchableText.includes(query)
+    })
+  }
 
   return membersData
 }
 
-export default async function MembersPage() {
-  const members = await getMembers()
+interface PageProps {
+  searchParams: Promise<SearchParams>
+}
+
+export default async function MembersPage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const members = await getMembers(params)
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
