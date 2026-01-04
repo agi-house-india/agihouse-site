@@ -1,9 +1,15 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 // Use testing domain for now, switch to agihouse.in later
 const FROM_EMAIL = process.env.EMAIL_FROM || 'AGI House India <onboarding@resend.dev>'
+
+// Lazily create Resend client only when needed
+function getResendClient() {
+  if (!process.env.RESEND_API_KEY) {
+    return null
+  }
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 interface ApprovalEmailParams {
   to: string
@@ -12,7 +18,8 @@ interface ApprovalEmailParams {
 }
 
 export async function sendApprovalEmail({ to, name, profileUrl }: ApprovalEmailParams) {
-  if (!process.env.RESEND_API_KEY) {
+  const resend = getResendClient()
+  if (!resend) {
     console.log('RESEND_API_KEY not set, skipping email')
     return { success: false, error: 'Email not configured' }
   }

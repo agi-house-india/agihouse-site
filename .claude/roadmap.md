@@ -71,7 +71,7 @@ Transform AGI House India from a static landing page into **the deal flow machin
 
 ---
 
-## Phase 4: Community Features 🔄 IN PROGRESS
+## Phase 4: Community Features ✅ COMPLETE
 **Goal:** Drive engagement and network effects
 
 | Feature | Priority | Status | Description |
@@ -80,17 +80,22 @@ Transform AGI House India from a static landing page into **the deal flow machin
 | User Dashboard | P0 | ✅ Done | Personal dashboard at `/dashboard` |
 | Search & Filters | P1 | ✅ Done | Advanced search for members |
 | RSVP System | P1 | ✅ Done | Event registration API |
-| Email Notifications | P1 | ⏳ Pending | New events, intro requests |
+| Email Notifications | P1 | ✅ Done | Resend integration for approval emails |
+| Job Board | P2 | ✅ Done | AI roles at member companies |
 | Discussion Forums | P2 | ⏳ Pending | Topic-based discussions |
-| Job Board | P2 | ⏳ Pending | AI roles at member companies |
 
 **Completed features:**
 - `/dashboard` - User dashboard with intro requests, events, quick actions
 - `/api/introductions` - POST to request intros
 - `/api/introductions/[id]` - PATCH to accept/decline intros
 - `/api/events/[slug]/rsvp` - Event RSVP system
+- `/jobs` - Job board with search, filters, and job posting
+- `/jobs/[id]` - Job detail pages
+- `/jobs/post` - Job posting form for startup founders
+- `/api/jobs` - Jobs API for listing and posting
 - Member search by name, company, interests
 - Member filtering by role and city
+- Resend email integration for member approval notifications
 
 ---
 
