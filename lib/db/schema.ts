@@ -49,6 +49,7 @@ export const users = pgTable('users', {
   email: text('email').notNull().unique(),
   emailVerified: timestamp('email_verified', { mode: 'date' }),
   image: text('image'),
+  isAdmin: boolean('is_admin').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
@@ -106,6 +107,7 @@ export const profiles = pgTable('profiles', {
   websiteUrl: text('website_url'),
   isVerified: boolean('is_verified').default(false),
   isPremium: boolean('is_premium').default(false),
+  isApproved: boolean('is_approved').default(false),
   interests: text('interests').array().default([]),
   lookingFor: text('looking_for').array().default([]),
   createdAt: timestamp('created_at').defaultNow().notNull(),

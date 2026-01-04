@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { Suspense } from 'react'
 import { db } from '@/lib/db'
 import { profiles, users } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import MemberFilters from './MemberFilters'
 
 export const metadata = {
@@ -28,6 +28,7 @@ const roleColors: Record<string, string> = {
 }
 
 async function getMembers() {
+  // Public directory: only show approved members
   const membersData = await db
     .select({
       id: users.id,
@@ -44,7 +45,10 @@ async function getMembers() {
       lookingFor: profiles.lookingFor,
     })
     .from(users)
-    .innerJoin(profiles, eq(users.id, profiles.id))
+    .innerJoin(profiles, and(
+      eq(users.id, profiles.id),
+      eq(profiles.isApproved, true)
+    ))
 
   return membersData
 }
