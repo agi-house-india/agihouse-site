@@ -102,4 +102,4 @@ Deployed on **Coolify** (self-hosted PaaS on Hetzner):
 git push origin main
 ```
 
-<!-- Build: 2026-01-06 -->
+<!-- Build: 2026-01-06T14:35 -->
