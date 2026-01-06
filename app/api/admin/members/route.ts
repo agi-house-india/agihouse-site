@@ -1,34 +1,34 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/auth-server'
 import { db } from '@/lib/db'
-import { profiles, users } from '@/lib/db/schema'
+import { profiles, user } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { sendApprovalEmail } from '@/lib/email'
 
 // Get all members (admin only)
 export async function GET() {
-  const session = await auth()
+  const session = await getSession()
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   // Check if user is admin
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, session.user.id),
+  const dbUser = await db.query.user.findFirst({
+    where: eq(user.id, session.user.id),
   })
 
-  if (!user?.isAdmin) {
+  if (!dbUser?.isAdmin) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   const members = await db
     .select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-      image: users.image,
-      isAdmin: users.isAdmin,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image,
+      isAdmin: user.isAdmin,
       role: profiles.role,
       company: profiles.company,
       city: profiles.city,
@@ -36,26 +36,26 @@ export async function GET() {
       isVerified: profiles.isVerified,
       createdAt: profiles.createdAt,
     })
-    .from(users)
-    .leftJoin(profiles, eq(users.id, profiles.id))
+    .from(user)
+    .leftJoin(profiles, eq(user.id, profiles.id))
 
   return NextResponse.json(members)
 }
 
 // Update member approval status (admin only)
 export async function PATCH(request: Request) {
-  const session = await auth()
+  const session = await getSession()
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   // Check if user is admin
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, session.user.id),
+  const dbUser = await db.query.user.findFirst({
+    where: eq(user.id, session.user.id),
   })
 
-  if (!user?.isAdmin) {
+  if (!dbUser?.isAdmin) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
@@ -75,12 +75,12 @@ export async function PATCH(request: Request) {
 
   // Send approval email when member is approved
   if (isApproved === true) {
-    const member = await db.query.users.findFirst({
-      where: eq(users.id, memberId),
+    const member = await db.query.user.findFirst({
+      where: eq(user.id, memberId),
     })
 
     if (member?.email) {
-      const baseUrl = process.env.NEXTAUTH_URL || 'https://agihouse-india.onrender.com'
+      const baseUrl = process.env.BETTER_AUTH_URL || process.env.NEXTAUTH_URL || 'https://agihouse.in'
       await sendApprovalEmail({
         to: member.email,
         name: member.name || '',

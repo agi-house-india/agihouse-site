@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { forumThreads, forumReplies, profiles } from '@/lib/db/schema'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/auth-server'
 import { eq, sql } from 'drizzle-orm'
 
 interface RouteContext {
@@ -11,7 +11,7 @@ interface RouteContext {
 // POST - Add reply to thread
 export async function POST(request: Request, context: RouteContext) {
   try {
-    const session = await auth()
+    const session = await getSession()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

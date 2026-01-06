@@ -1,10 +1,10 @@
 import { db } from '@/lib/db'
-import { forumThreads, forumReplies, users, profiles } from '@/lib/db/schema'
+import { forumThreads, forumReplies, user, profiles } from '@/lib/db/schema'
 import { eq, asc, sql } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import ReplyForm from './ReplyForm'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/auth-server'
 
 const CATEGORY_LABELS: Record<string, string> = {
   general: 'General',
@@ -34,7 +34,7 @@ interface Props {
 
 export default async function ThreadPage({ params }: Props) {
   const { slug } = await params
-  const session = await auth()
+  const session = await getSession()
 
   // Get thread with author info
   const threadResults = await db
@@ -50,14 +50,14 @@ export default async function ThreadPage({ params }: Props) {
       replyCount: forumThreads.replyCount,
       createdAt: forumThreads.createdAt,
       authorId: forumThreads.authorId,
-      authorName: users.name,
-      authorImage: users.image,
+      authorName: user.name,
+      authorImage: user.image,
       authorTitle: profiles.title,
       authorCompany: profiles.company,
       authorRole: profiles.role,
     })
     .from(forumThreads)
-    .leftJoin(users, eq(forumThreads.authorId, users.id))
+    .leftJoin(user, eq(forumThreads.authorId, user.id))
     .leftJoin(profiles, eq(forumThreads.authorId, profiles.id))
     .where(eq(forumThreads.slug, slug))
     .limit(1)
@@ -81,14 +81,14 @@ export default async function ThreadPage({ params }: Props) {
       createdAt: forumReplies.createdAt,
       isEdited: forumReplies.isEdited,
       authorId: forumReplies.authorId,
-      authorName: users.name,
-      authorImage: users.image,
+      authorName: user.name,
+      authorImage: user.image,
       authorTitle: profiles.title,
       authorCompany: profiles.company,
       authorRole: profiles.role,
     })
     .from(forumReplies)
-    .leftJoin(users, eq(forumReplies.authorId, users.id))
+    .leftJoin(user, eq(forumReplies.authorId, user.id))
     .leftJoin(profiles, eq(forumReplies.authorId, profiles.id))
     .where(eq(forumReplies.threadId, thread.id))
     .orderBy(asc(forumReplies.createdAt))
@@ -247,7 +247,7 @@ export default async function ThreadPage({ params }: Props) {
           <div className="bg-gray-900/30 border border-gray-800 rounded-xl p-6 text-center">
             <p className="text-secondary-white mb-4">Sign in to reply to this discussion</p>
             <Link
-              href="/api/auth/signin"
+              href="/auth/signin"
               className="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
             >
               Sign In

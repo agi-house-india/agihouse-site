@@ -75,62 +75,71 @@ export const subscriptionStatusEnum = pgEnum('subscription_status', [
   'incomplete',
 ])
 
-// NextAuth required tables
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name'),
+// Better Auth tables
+export const user = pgTable('user', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
   email: text('email').notNull().unique(),
-  emailVerified: timestamp('email_verified', { mode: 'date' }),
+  emailVerified: boolean('email_verified').notNull().default(false),
   image: text('image'),
+  // Custom fields
   isAdmin: boolean('is_admin').default(false),
   stripeCustomerId: text('stripe_customer_id'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
-export const accounts = pgTable(
-  'accounts',
-  {
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    type: text('type').notNull(),
-    provider: text('provider').notNull(),
-    providerAccountId: text('provider_account_id').notNull(),
-    refresh_token: text('refresh_token'),
-    access_token: text('access_token'),
-    expires_at: integer('expires_at'),
-    token_type: text('token_type'),
-    scope: text('scope'),
-    id_token: text('id_token'),
-    session_state: text('session_state'),
-  },
-  (table) => [primaryKey({ columns: [table.provider, table.providerAccountId] })]
-)
-
-export const sessions = pgTable('sessions', {
-  sessionToken: text('session_token').primaryKey(),
-  userId: uuid('user_id')
+export const session = pgTable('session', {
+  id: text('id').primaryKey(),
+  expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
+  token: text('token').notNull().unique(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  userId: text('user_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  expires: timestamp('expires', { mode: 'date' }).notNull(),
+    .references(() => user.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
-export const verificationTokens = pgTable(
-  'verification_tokens',
-  {
-    identifier: text('identifier').notNull(),
-    token: text('token').notNull(),
-    expires: timestamp('expires', { mode: 'date' }).notNull(),
-  },
-  (table) => [primaryKey({ columns: [table.identifier, table.token] })]
-)
+export const account = pgTable('account', {
+  id: text('id').primaryKey(),
+  accountId: text('account_id').notNull(),
+  providerId: text('provider_id').notNull(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  idToken: text('id_token'),
+  accessTokenExpiresAt: timestamp('access_token_expires_at', { mode: 'date' }),
+  refreshTokenExpiresAt: timestamp('refresh_token_expires_at', { mode: 'date' }),
+  scope: text('scope'),
+  password: text('password'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export const verification = pgTable('verification', {
+  id: text('id').primaryKey(),
+  identifier: text('identifier').notNull(),
+  value: text('value').notNull(),
+  expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+})
+
+// Legacy aliases for backward compatibility during migration
+export const users = user
+export const accounts = account
+export const sessions = session
+export const verificationTokens = verification
 
 // Application tables
 export const profiles = pgTable('profiles', {
-  id: uuid('id')
+  id: text('id')
     .primaryKey()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => user.id, { onDelete: 'cascade' }),
   bio: text('bio'),
   role: userRoleEnum('role').default('community'),
   company: text('company'),
@@ -150,9 +159,9 @@ export const profiles = pgTable('profiles', {
 
 export const startups = pgTable('startups', {
   id: uuid('id').primaryKey().defaultRandom(),
-  founderId: uuid('founder_id')
+  founderId: text('founder_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => user.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   tagline: text('tagline'),
   description: text('description'),
@@ -187,7 +196,7 @@ export const events = pgTable('events', {
   capacity: integer('capacity'),
   isFeatured: boolean('is_featured').default(false),
   isPublished: boolean('is_published').default(false),
-  organizerId: uuid('organizer_id').references(() => users.id),
+  organizerId: text('organizer_id').references(() => user.id),
   tags: text('tags').array().default([]),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -198,9 +207,9 @@ export const eventRsvps = pgTable('event_rsvps', {
   eventId: uuid('event_id')
     .notNull()
     .references(() => events.id, { onDelete: 'cascade' }),
-  userId: uuid('user_id')
+  userId: text('user_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => user.id, { onDelete: 'cascade' }),
   status: rsvpStatusEnum('status').default('registered'),
   notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -208,13 +217,13 @@ export const eventRsvps = pgTable('event_rsvps', {
 
 export const introductions = pgTable('introductions', {
   id: uuid('id').primaryKey().defaultRandom(),
-  requesterId: uuid('requester_id')
+  requesterId: text('requester_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  targetId: uuid('target_id')
+    .references(() => user.id, { onDelete: 'cascade' }),
+  targetId: text('target_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  connectorId: uuid('connector_id').references(() => users.id),
+    .references(() => user.id, { onDelete: 'cascade' }),
+  connectorId: text('connector_id').references(() => user.id),
   status: introStatusEnum('status').default('pending'),
   message: text('message'),
   outcome: text('outcome'),
@@ -224,9 +233,9 @@ export const introductions = pgTable('introductions', {
 
 export const blogPosts = pgTable('blog_posts', {
   id: uuid('id').primaryKey().defaultRandom(),
-  authorId: uuid('author_id')
+  authorId: text('author_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => user.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   slug: text('slug').notNull().unique(),
   excerpt: text('excerpt'),
@@ -246,9 +255,9 @@ export const deals = pgTable('deals', {
   startupId: uuid('startup_id')
     .notNull()
     .references(() => startups.id, { onDelete: 'cascade' }),
-  investorId: uuid('investor_id')
+  investorId: text('investor_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => user.id, { onDelete: 'cascade' }),
   amount: bigint('amount', { mode: 'number' }),
   stage: text('stage'),
   announcedAt: date('announced_at'),
@@ -262,9 +271,9 @@ export const jobs = pgTable('jobs', {
   startupId: uuid('startup_id')
     .notNull()
     .references(() => startups.id, { onDelete: 'cascade' }),
-  postedById: uuid('posted_by_id')
+  postedById: text('posted_by_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => user.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   description: text('description').notNull(),
   requirements: text('requirements'),
@@ -287,9 +296,9 @@ export const jobs = pgTable('jobs', {
 // Subscription tables
 export const subscriptions = pgTable('subscriptions', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
+  userId: text('user_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => user.id, { onDelete: 'cascade' }),
   stripeSubscriptionId: text('stripe_subscription_id').unique(),
   stripePriceId: text('stripe_price_id'),
   plan: subscriptionPlanEnum('plan').default('free'),
@@ -304,9 +313,9 @@ export const subscriptions = pgTable('subscriptions', {
 // Forum tables
 export const forumThreads = pgTable('forum_threads', {
   id: uuid('id').primaryKey().defaultRandom(),
-  authorId: uuid('author_id')
+  authorId: text('author_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => user.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   slug: text('slug').notNull().unique(),
   content: text('content').notNull(),
@@ -316,7 +325,7 @@ export const forumThreads = pgTable('forum_threads', {
   viewCount: integer('view_count').default(0),
   replyCount: integer('reply_count').default(0),
   lastReplyAt: timestamp('last_reply_at'),
-  lastReplyById: uuid('last_reply_by_id').references(() => users.id),
+  lastReplyById: text('last_reply_by_id').references(() => user.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
@@ -326,9 +335,9 @@ export const forumReplies = pgTable('forum_replies', {
   threadId: uuid('thread_id')
     .notNull()
     .references(() => forumThreads.id, { onDelete: 'cascade' }),
-  authorId: uuid('author_id')
+  authorId: text('author_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => user.id, { onDelete: 'cascade' }),
   content: text('content').notNull(),
   parentId: uuid('parent_id'),
   isEdited: boolean('is_edited').default(false),
@@ -339,9 +348,9 @@ export const forumReplies = pgTable('forum_replies', {
 export const forumLikes = pgTable(
   'forum_likes',
   {
-    userId: uuid('user_id')
+    userId: text('user_id')
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => user.id, { onDelete: 'cascade' }),
     threadId: uuid('thread_id').references(() => forumThreads.id, { onDelete: 'cascade' }),
     replyId: uuid('reply_id').references(() => forumReplies.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -350,28 +359,28 @@ export const forumLikes = pgTable(
 )
 
 // Relations
-export const usersRelations = relations(users, ({ one, many }) => ({
+export const userRelations = relations(user, ({ one, many }) => ({
   profile: one(profiles, {
-    fields: [users.id],
+    fields: [user.id],
     references: [profiles.id],
   }),
-  accounts: many(accounts),
-  sessions: many(sessions),
+  accounts: many(account),
+  sessions: many(session),
   startups: many(startups),
   events: many(events),
   rsvps: many(eventRsvps),
   blogPosts: many(blogPosts),
   dealsAsInvestor: many(deals),
   subscription: one(subscriptions, {
-    fields: [users.id],
+    fields: [user.id],
     references: [subscriptions.userId],
   }),
 }))
 
 export const startupsRelations = relations(startups, ({ one, many }) => ({
-  founder: one(users, {
+  founder: one(user, {
     fields: [startups.founderId],
-    references: [users.id],
+    references: [user.id],
   }),
   deals: many(deals),
   jobs: many(jobs),
@@ -382,24 +391,24 @@ export const jobsRelations = relations(jobs, ({ one }) => ({
     fields: [jobs.startupId],
     references: [startups.id],
   }),
-  postedBy: one(users, {
+  postedBy: one(user, {
     fields: [jobs.postedById],
-    references: [users.id],
+    references: [user.id],
   }),
 }))
 
 export const eventsRelations = relations(events, ({ one, many }) => ({
-  organizer: one(users, {
+  organizer: one(user, {
     fields: [events.organizerId],
-    references: [users.id],
+    references: [user.id],
   }),
   rsvps: many(eventRsvps),
 }))
 
 export const blogPostsRelations = relations(blogPosts, ({ one }) => ({
-  author: one(users, {
+  author: one(user, {
     fields: [blogPosts.authorId],
-    references: [users.id],
+    references: [user.id],
   }),
 }))
 
@@ -408,27 +417,27 @@ export const dealsRelations = relations(deals, ({ one }) => ({
     fields: [deals.startupId],
     references: [startups.id],
   }),
-  investor: one(users, {
+  investor: one(user, {
     fields: [deals.investorId],
-    references: [users.id],
+    references: [user.id],
   }),
 }))
 
 export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
-  user: one(users, {
+  user: one(user, {
     fields: [subscriptions.userId],
-    references: [users.id],
+    references: [user.id],
   }),
 }))
 
 export const forumThreadsRelations = relations(forumThreads, ({ one, many }) => ({
-  author: one(users, {
+  author: one(user, {
     fields: [forumThreads.authorId],
-    references: [users.id],
+    references: [user.id],
   }),
-  lastReplyBy: one(users, {
+  lastReplyBy: one(user, {
     fields: [forumThreads.lastReplyById],
-    references: [users.id],
+    references: [user.id],
   }),
   replies: many(forumReplies),
   likes: many(forumLikes),
@@ -439,9 +448,9 @@ export const forumRepliesRelations = relations(forumReplies, ({ one, many }) => 
     fields: [forumReplies.threadId],
     references: [forumThreads.id],
   }),
-  author: one(users, {
+  author: one(user, {
     fields: [forumReplies.authorId],
-    references: [users.id],
+    references: [user.id],
   }),
   parent: one(forumReplies, {
     fields: [forumReplies.parentId],

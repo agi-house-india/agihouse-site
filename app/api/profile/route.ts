@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/auth-server'
 import { db } from '@/lib/db'
-import { profiles, users } from '@/lib/db/schema'
+import { profiles, user } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 
 export async function GET() {
-  const session = await auth()
+  const session = await getSession()
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -15,18 +15,18 @@ export async function GET() {
     where: eq(profiles.id, session.user.id),
   })
 
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, session.user.id),
+  const dbUser = await db.query.user.findFirst({
+    where: eq(user.id, session.user.id),
   })
 
   return NextResponse.json({
-    ...user,
+    ...dbUser,
     profile,
   })
 }
 
 export async function POST(request: Request) {
-  const session = await auth()
+  const session = await getSession()
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

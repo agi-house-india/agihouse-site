@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/auth-server'
 import { createCheckoutSession, PLANS, PlanType } from '@/lib/stripe'
 
 export async function POST(request: Request) {
   try {
-    const session = await auth()
+    const session = await getSession()
     if (!session?.user?.id || !session.user.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+    const baseUrl = process.env.BETTER_AUTH_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'
 
     const checkoutSession = await createCheckoutSession({
       userId: session.user.id,

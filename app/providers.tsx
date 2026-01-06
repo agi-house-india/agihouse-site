@@ -4,18 +4,15 @@
 import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect, Suspense } from "react"
 import { usePostHog } from 'posthog-js/react'
-import { SessionProvider } from 'next-auth/react'
 
 import posthog from 'posthog-js'
 import { PostHogProvider as PHProvider } from 'posthog-js/react'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider>
-      <PostHogProvider>
-        {children}
-      </PostHogProvider>
-    </SessionProvider>
+    <PostHogProvider>
+      {children}
+    </PostHogProvider>
   )
 }
 

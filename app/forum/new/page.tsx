@@ -1,13 +1,13 @@
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/auth-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import NewThreadForm from './NewThreadForm'
 
 export default async function NewThreadPage() {
-  const session = await auth()
+  const session = await getSession()
 
   if (!session?.user) {
-    redirect('/api/auth/signin?callbackUrl=/forum/new')
+    redirect('/auth/signin?callbackUrl=/forum/new')
   }
 
   return (

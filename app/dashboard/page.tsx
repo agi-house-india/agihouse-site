@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/auth-server'
 import { db } from '@/lib/db'
-import { profiles, users, introductions, events, eventRsvps } from '@/lib/db/schema'
-import { eq, or, and, gte, desc } from 'drizzle-orm'
+import { profiles, user, introductions, events, eventRsvps } from '@/lib/db/schema'
+import { eq, and, gte, desc } from 'drizzle-orm'
 import IntroRequestCard from './IntroRequestCard'
 
 export const metadata = {
@@ -13,7 +13,7 @@ export const metadata = {
 }
 
 export default async function DashboardPage() {
-  const session = await auth()
+  const session = await getSession()
 
   if (!session?.user?.id) {
     redirect('/auth/signin')
@@ -22,8 +22,8 @@ export default async function DashboardPage() {
   const userId = session.user.id
 
   // Get user and profile
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
+  const dbUser = await db.query.user.findFirst({
+    where: eq(user.id, userId),
   })
 
   const profile = await db.query.profiles.findFirst({
@@ -42,13 +42,13 @@ export default async function DashboardPage() {
       status: introductions.status,
       createdAt: introductions.createdAt,
       requesterId: introductions.requesterId,
-      requesterName: users.name,
-      requesterImage: users.image,
+      requesterName: user.name,
+      requesterImage: user.image,
       requesterTitle: profiles.title,
       requesterCompany: profiles.company,
     })
     .from(introductions)
-    .innerJoin(users, eq(introductions.requesterId, users.id))
+    .innerJoin(user, eq(introductions.requesterId, user.id))
     .leftJoin(profiles, eq(introductions.requesterId, profiles.id))
     .where(eq(introductions.targetId, userId))
     .orderBy(desc(introductions.createdAt))
@@ -62,13 +62,13 @@ export default async function DashboardPage() {
       status: introductions.status,
       createdAt: introductions.createdAt,
       targetId: introductions.targetId,
-      targetName: users.name,
-      targetImage: users.image,
+      targetName: user.name,
+      targetImage: user.image,
       targetTitle: profiles.title,
       targetCompany: profiles.company,
     })
     .from(introductions)
-    .innerJoin(users, eq(introductions.targetId, users.id))
+    .innerJoin(user, eq(introductions.targetId, user.id))
     .leftJoin(profiles, eq(introductions.targetId, profiles.id))
     .where(eq(introductions.requesterId, userId))
     .orderBy(desc(introductions.createdAt))
@@ -99,10 +99,10 @@ export default async function DashboardPage() {
       <div className="glassmorphism rounded-2xl p-8 mb-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
           <div className="relative">
-            {user?.image ? (
+            {dbUser?.image ? (
               <Image
-                src={user.image}
-                alt={user.name || ''}
+                src={dbUser.image}
+                alt={dbUser.name || ''}
                 width={80}
                 height={80}
                 className="rounded-full"
@@ -110,14 +110,14 @@ export default async function DashboardPage() {
             ) : (
               <div className="w-20 h-20 rounded-full bg-purple-600 flex items-center justify-center">
                 <span className="text-2xl text-white font-bold">
-                  {user?.name?.charAt(0) || '?'}
+                  {dbUser?.name?.charAt(0) || '?'}
                 </span>
               </div>
             )}
           </div>
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-white">
-              Welcome back, {user?.name?.split(' ')[0]}!
+              Welcome back, {dbUser?.name?.split(' ')[0]}!
             </h1>
             <p className="text-secondary-white mt-1">
               {profile.title}{profile.title && profile.company && ' at '}{profile.company}

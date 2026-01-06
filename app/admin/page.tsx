@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/auth-server'
 import { db } from '@/lib/db'
-import { users } from '@/lib/db/schema'
+import { user } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import AdminDashboard from './AdminDashboard'
 
@@ -11,18 +11,18 @@ export const metadata = {
 }
 
 export default async function AdminPage() {
-  const session = await auth()
+  const session = await getSession()
 
   if (!session?.user?.id) {
     redirect('/auth/signin')
   }
 
   // Check if user is admin
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, session.user.id),
+  const dbUser = await db.query.user.findFirst({
+    where: eq(user.id, session.user.id),
   })
 
-  if (!user?.isAdmin) {
+  if (!dbUser?.isAdmin) {
     redirect('/')
   }
 

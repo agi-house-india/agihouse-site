@@ -5,26 +5,40 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { authClient } from '@/lib/auth-client'
 
-export default function SignIn() {
+export default function SignUp() {
   const router = useRouter()
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleEmailSignIn = async (e: React.FormEvent) => {
+  const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters')
+      return
+    }
+
     setLoading(true)
 
     try {
-      const result = await authClient.signIn.email({
+      const result = await authClient.signUp.email({
         email,
         password,
+        name,
       })
 
       if (result.error) {
-        setError(result.error.message || 'Invalid email or password')
+        setError(result.error.message || 'Failed to create account')
       } else {
         router.push('/onboarding')
       }
@@ -35,7 +49,7 @@ export default function SignIn() {
     }
   }
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignUp = async () => {
     setError('')
     setLoading(true)
 
@@ -51,12 +65,12 @@ export default function SignIn() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full space-y-8 glassmorphism p-8 rounded-2xl">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-white">Welcome Back</h1>
+          <h1 className="text-3xl font-bold text-white">Join AGI House India</h1>
           <p className="mt-2 text-secondary-white">
-            Sign in to connect with India&apos;s top AI founders, investors, and builders
+            Connect with India&apos;s top AI founders, investors, and builders
           </p>
         </div>
 
@@ -66,7 +80,22 @@ export default function SignIn() {
           </div>
         )}
 
-        <form onSubmit={handleEmailSignIn} className="space-y-4">
+        <form onSubmit={handleEmailSignUp} className="space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-secondary-white mb-1">
+              Full Name
+            </label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="John Doe"
+            />
+          </div>
+
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-secondary-white mb-1">
               Email
@@ -92,18 +121,25 @@ export default function SignIn() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={8}
               className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="Enter your password"
+              placeholder="Min. 8 characters"
             />
           </div>
 
-          <div className="flex justify-end">
-            <Link
-              href="/auth/forgot-password"
-              className="text-sm text-indigo-400 hover:text-indigo-300"
-            >
-              Forgot password?
-            </Link>
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-secondary-white mb-1">
+              Confirm Password
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="Confirm your password"
+            />
           </div>
 
           <button
@@ -111,7 +147,7 @@ export default function SignIn() {
             disabled={loading}
             className="w-full px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 
@@ -125,7 +161,7 @@ export default function SignIn() {
         </div>
 
         <button
-          onClick={handleGoogleSignIn}
+          onClick={handleGoogleSignUp}
           disabled={loading}
           className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white text-gray-800 rounded-lg font-medium hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -151,14 +187,14 @@ export default function SignIn() {
         </button>
 
         <p className="text-center text-sm text-secondary-white">
-          Don&apos;t have an account?{' '}
-          <Link href="/auth/signup" className="text-indigo-400 hover:text-indigo-300 font-medium">
-            Sign up
+          Already have an account?{' '}
+          <Link href="/auth/signin" className="text-indigo-400 hover:text-indigo-300 font-medium">
+            Sign in
           </Link>
         </p>
 
         <p className="text-center text-xs text-secondary-white/70">
-          By signing in, you agree to our Terms of Service and Privacy Policy
+          By signing up, you agree to our Terms of Service and Privacy Policy
         </p>
       </div>
     </div>

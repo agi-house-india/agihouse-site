@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useSession } from '@/lib/auth-client'
 import Image from 'next/image'
 
 const roles = [
@@ -52,7 +52,7 @@ const lookingForOptions = [
 
 export default function EditProfilePage() {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { data: session, isPending } = useSession()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({
@@ -69,12 +69,12 @@ export default function EditProfilePage() {
   })
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (!isPending && !session) {
       router.push('/auth/signin')
       return
     }
 
-    if (status === 'authenticated') {
+    if (!isPending && session) {
       // Fetch existing profile
       fetch('/api/profile')
         .then((res) => res.json())
@@ -100,7 +100,7 @@ export default function EditProfilePage() {
           setLoading(false)
         })
     }
-  }, [status, router])
+  }, [isPending, session, router])
 
   const toggleArrayItem = (arr: string[], item: string) => {
     if (arr.includes(item)) {
@@ -132,7 +132,7 @@ export default function EditProfilePage() {
     }
   }
 
-  if (status === 'loading' || loading) {
+  if (isPending || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500" />

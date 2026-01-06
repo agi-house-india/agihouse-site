@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/auth-server'
 import { PLANS } from '@/lib/stripe'
 import { db } from '@/lib/db'
 import { subscriptions } from '@/lib/db/schema'
@@ -7,7 +7,7 @@ import Link from 'next/link'
 import PricingCard from './PricingCard'
 
 export default async function PricingPage() {
-  const session = await auth()
+  const session = await getSession()
 
   let currentPlan = 'free'
   if (session?.user?.id) {

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/auth-server'
 import { db } from '@/lib/db'
-import { profiles, users } from '@/lib/db/schema'
+import { profiles, user } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -29,14 +29,14 @@ const roleColors: Record<string, string> = {
 }
 
 export default async function ProfilePage() {
-  const session = await auth()
+  const session = await getSession()
 
   if (!session?.user?.id) {
     redirect('/auth/signin')
   }
 
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, session.user.id),
+  const dbUser = await db.query.user.findFirst({
+    where: eq(user.id, session.user.id),
   })
 
   const profile = await db.query.profiles.findFirst({
@@ -53,10 +53,10 @@ export default async function ProfilePage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-8 border-b border-gray-700">
           <div className="relative">
-            {user?.image ? (
+            {dbUser?.image ? (
               <Image
-                src={user.image}
-                alt={user.name || ''}
+                src={dbUser.image}
+                alt={dbUser.name || ''}
                 width={96}
                 height={96}
                 className="rounded-full"
@@ -64,7 +64,7 @@ export default async function ProfilePage() {
             ) : (
               <div className="w-24 h-24 rounded-full bg-purple-600 flex items-center justify-center">
                 <span className="text-3xl text-white font-bold">
-                  {user?.name?.charAt(0) || '?'}
+                  {dbUser?.name?.charAt(0) || '?'}
                 </span>
               </div>
             )}
@@ -78,7 +78,7 @@ export default async function ProfilePage() {
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-3xl font-bold text-white">{user?.name}</h1>
+              <h1 className="text-3xl font-bold text-white">{dbUser?.name}</h1>
               {profile.role && (
                 <span className={`px-3 py-1 rounded-full text-sm font-medium border ${roleColors[profile.role] || roleColors.community}`}>
                   {roleLabels[profile.role] || profile.role}
@@ -189,7 +189,7 @@ export default async function ProfilePage() {
               </a>
             )}
             <a
-              href={`mailto:${user?.email}`}
+              href={`mailto:${dbUser?.email}`}
               className="flex items-center gap-2 px-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-secondary-white hover:bg-gray-700 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

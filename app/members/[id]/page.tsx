@@ -2,9 +2,9 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { db } from '@/lib/db'
-import { profiles, users } from '@/lib/db/schema'
+import { profiles, user } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/auth-server'
 import RequestIntroButton from './RequestIntroButton'
 
 const roleLabels: Record<string, string> = {
@@ -26,10 +26,10 @@ const roleColors: Record<string, string> = {
 async function getMember(id: string) {
   const memberData = await db
     .select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-      image: users.image,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image,
       role: profiles.role,
       title: profiles.title,
       company: profiles.company,
@@ -42,9 +42,9 @@ async function getMember(id: string) {
       interests: profiles.interests,
       lookingFor: profiles.lookingFor,
     })
-    .from(users)
-    .innerJoin(profiles, eq(users.id, profiles.id))
-    .where(eq(users.id, id))
+    .from(user)
+    .innerJoin(profiles, eq(user.id, profiles.id))
+    .where(eq(user.id, id))
 
   return memberData[0] || null
 }
@@ -66,7 +66,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function MemberProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const member = await getMember(id)
-  const session = await auth()
+  const session = await getSession()
 
   if (!member) {
     notFound()

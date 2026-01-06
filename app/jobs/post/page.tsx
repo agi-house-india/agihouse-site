@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/auth-server'
 import { db } from '@/lib/db'
 import { startups } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -12,7 +12,7 @@ export const metadata = {
 }
 
 export default async function PostJobPage() {
-  const session = await auth()
+  const session = await getSession()
 
   if (!session?.user?.id) {
     redirect('/auth/signin')

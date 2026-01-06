@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useSession } from '@/lib/auth-client'
 import Image from 'next/image'
 
 const roles = [
@@ -52,7 +52,7 @@ const lookingForOptions = [
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { data: session, isPending } = useSession()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -68,10 +68,10 @@ export default function OnboardingPage() {
   })
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (!isPending && !session) {
       router.push('/auth/signin')
     }
-  }, [status, router])
+  }, [isPending, session, router])
 
   const toggleArrayItem = (arr: string[], item: string) => {
     if (arr.includes(item)) {
@@ -101,7 +101,7 @@ export default function OnboardingPage() {
     }
   }
 
-  if (status === 'loading') {
+  if (isPending) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500" />

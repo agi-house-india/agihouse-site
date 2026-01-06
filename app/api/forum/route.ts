@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { forumThreads, profiles } from '@/lib/db/schema'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/auth-server'
 import { eq } from 'drizzle-orm'
 
 function slugify(text: string): string {
@@ -15,7 +15,7 @@ function slugify(text: string): string {
 // POST - Create new thread
 export async function POST(request: Request) {
   try {
-    const session = await auth()
+    const session = await getSession()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
