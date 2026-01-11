@@ -87,14 +87,6 @@ This project is built with modern web technologies:
 *   [Framer Motion](https://www.framer.com/motion/) - Animation library for React.
 *   [TypeScript](https://www.typescriptlang.org/) - Superset of JavaScript adding static types.
 
-## Deployment
-
-Deployed on **Coolify** (self-hosted PaaS on Hetzner):
-
-- **Live URLs**: https://agihouse.in, https://india.agihouse.in
-- **Server**: Hetzner Cloud (5.223.44.108)
-- **Database**: Standalone PostgreSQL (`agihouse-db-new`)
-- **Coolify Dashboard**: http://5.223.44.108:8000
 
 ### Deploy
 ```bash
